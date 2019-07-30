@@ -99,14 +99,5 @@ namespace GZipTest
     }
 }
 
-/*
- cls
-#
-C:\Users\Armaster\source\repos\2019.07.29_GZipTest\GZipTest\obj\Debug\GZipTest.exe compress D:\Armaster\Downloads\zipTest\bonus.txt D:\Armaster\Downloads\zipTest\bonusZiped
-#C:\Users\Armaster\source\repos\2019.07.29_GZipTest\GZipTest\obj\Debug\GZipTest.exe decompress D:\Armaster\Downloads\zipTest\bonusZiped0.gz D:\Armaster\Downloads\zipTest\bonusOutput.txt
-
-#C:\Users\Armaster\source\repos\2019.07.29_GZipTest\GZipTest\obj\Debug\GZipTest.exe compress D:\Armaster\Downloads\zipTest\input.pdf D:\Armaster\Downloads\zipTest\zipedItem
-#C:\Users\Armaster\source\repos\2019.07.29_GZipTest\GZipTest\obj\Debug\GZipTest.exe decompressing D:\Armaster\Downloads\zipTest\zipedItem0.gz D:\Armaster\Downloads\zipTest\inputUnziped.pdf
-*/
 
 
