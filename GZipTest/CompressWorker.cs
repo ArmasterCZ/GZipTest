@@ -1,120 +1,102 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace GZipTest
 {
     /// <summary>
-    /// class for split file to smaller chunks and compress them
+
     /// </summary>
-    class CompressWorker : ArchiveWorker
+    class CompressWorker
     {
         /// <summary>
-        /// constructor setting paths
+        /// byte array for compression and save
         /// </summary>
-        /// <param name="inputPath">path to file that should be splitted and compressed</param>
-        /// <param name="outputPath">path where will be saved compressed files. Name of file will contain additional number.</param>
-        public CompressWorker(string inputPath, string outputPath) : base(inputPath, outputPath)
-        {
+        public byte[] partOfFile { get; set; }
 
+        /// <summary>
+        /// full path where compresed file will be saved
+        /// </summary>
+        public string outputFullPath { get; set; }
+
+        public CompressWorker(byte[] partOfFile, string outputFullPath)
+        {
+            this.partOfFile = partOfFile;
+            this.outputFullPath = outputFullPath;
         }
 
         /// <summary>
-        /// start compress process
+        /// compress & save one files 
         /// </summary>
-        /// <returns>is successful</returns>
-        public override bool process()
+        /// <returns>if operation was successful</returns>
+        public async Task<bool> compressTask()
         {
             try
             {
-                startCompress();
+                using (FileStream compressedFileStream = File.Create(outputFullPath))
+                {
+                    using (GZipStream compressionStream = new GZipStream(compressedFileStream, CompressionMode.Compress))
+                    {
+                        compressionStream.Write(partOfFile, 0, partOfFile.Count());
+                    }
+                }
+                Debug.WriteLine($"Compressed {outputFullPath} to {partOfFile.Count()} bytes."); //TODO
                 return true;
+
             }
-            catch (Exception exc)
+            catch (Exception)
             {
-                showMessage?.Invoke(this, $"Something is wrong. Operation cannot be finished. { exc.Message}.");
                 return false;
             }
         }
 
         /// <summary>
-        /// start reading file in batches and call <see cref="simpleCompress"/>
+        /// single thread static file save 
         /// </summary>
-        private void startCompress()
+        /// <param name="partOfFile">part of the file ib byte[]</param>
+        /// <param name="outputFullPath">path fo output file</param>
+        public static void simpleCompress(byte[] partOfFile, string outputFullPath)
         {
-            FileInfo fi = new FileInfo(outputPath);
-            using (Stream source = File.OpenRead(inputPath))
-            {
-                byte[] buffer = new byte[((int)maxFileSizeKb * 1000)];
-                int bytesRead;
-                int readCounter = 0;
-                while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    if (source.CanRead)
-                    {
-                        buffer = removeGarbageFromByte(buffer);
-                    }
-
-                    //Console.WriteLine(Encoding.UTF8.GetString(buffer));
-
-                    //create file
-                    string outputFileName = Path.GetFileNameWithoutExtension(fi.Name) + readCounter + ".gz";
-                    string outputFullPath = Path.Combine(Path.GetDirectoryName(fi.FullName), outputFileName);
-                    simpleCompress(buffer, outputFullPath);
-                    readCounter++;
-                    buffer = new byte[((int)maxFileSizeKb * 1000)];
-                }
-            }
-        }
-
-        /// <summary>
-        /// compress bytes and save it
-        /// </summary>
-        /// <param name="partOfFile">bytes for save</param>
-        /// <param name="outputFullPath">path for new file</param>
-        private void simpleCompress(byte[] partOfFile, string outputFullPath)
-        {
-            //originalFileStream
             using (FileStream compressedFileStream = File.Create(outputFullPath))
             {
                 using (GZipStream compressionStream = new GZipStream(compressedFileStream, CompressionMode.Compress))
                 {
                     compressionStream.Write(partOfFile, 0, partOfFile.Count());
-
                 }
             }
-            showMessage?.Invoke(this, $"Compressed {outputFullPath} from {inputPath} to {partOfFile.Count().ToString()} bytes.");
-
+            Debug.WriteLine($"Compressed {outputFullPath} to {partOfFile.Count()} bytes."); //TODO
         }
 
         /// <summary>
-        /// workaround for remove empty bytes from buffer
+        /// static single thread, file load & decompress
         /// </summary>
-        /// <param name="bytes">orginal buffer</param>
-        /// <returns>buffer without empty fields</returns>
-        private byte[] removeGarbageFromByte(byte[] bytes)
+        /// <param name="inputFullPath">path to input file</param>
+        /// <returns>loaded & decompressed file</returns>
+        public static byte[] simpleDecompress(string inputFullPath)
         {
-            List<byte> listBytes = new List<byte>();
+            byte[] loadedFile;
 
-            //TODO: this condition
-            if (bytes[bytes.Length - 1] == 0 && bytes[bytes.Length - 2] == 0 && bytes[bytes.Length - 3] == 0)
+            using (FileStream originalFileStream = new FileStream(inputFullPath,FileMode.Open))
             {
-                listBytes = bytes.Reverse().ToList();
-
-                while (listBytes[0] == 0)
+                byte[] localBufffer = new byte[1];
+                using (MemoryStream decompressedStream = new MemoryStream())
                 {
-                    listBytes.RemoveAt(0);
+                    using (GZipStream decompressionStream = new GZipStream(originalFileStream, CompressionMode.Decompress))
+                    {
+                        decompressionStream.CopyTo(decompressedStream);
+                    }
+                    loadedFile = decompressedStream.ToArray();
                 }
-
-                listBytes.Reverse();
-                return listBytes.ToArray();
             }
-            else
-            {
-                return bytes;
-            }
+            Debug.WriteLine($"Decompresed file {inputFullPath} to {loadedFile.Length} bytes."); //TODO
+            
+            return loadedFile;
         }
+
     }
 }

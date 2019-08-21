@@ -49,10 +49,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompressWorker.cs" />
-    <Compile Include="DecompressWorker.cs" />
-    <Compile Include="ArchiveWorker.cs" />
+    <Compile Include="Divider.cs" />
+    <Compile Include="FileLoader.cs" />
+    <Compile Include="Enum.cs" />
+    <Compile Include="HardwareExplorer.cs" />
+    <Compile Include="PathComposer.cs" />
+    <Compile Include="ProcessComposer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UserInputValidator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
